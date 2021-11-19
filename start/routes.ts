@@ -22,13 +22,13 @@ import Route from '@ioc:Adonis/Core/Route'
 
 // Route.get('/posts/:postId', async ({ params, request, response }) => {
 //   response.status(400)
-//   request.qs()
 //   return 'hehe' + params.postId
 // })
 
-Route.get('/pets', 'PetsController.index')
-Route.post('/pets', 'PetsController.store')
-Route.put('/pets', 'PetsController.store')
-Route.delete('/pets', 'PetsController.store')
+// Route.get('/pets', 'PetsController.index')
+// Route.post('/pets', 'PetsController.store')
+// Route.put('/pets', 'PetsController.store')
+// Route.delete('/pets', 'PetsController.store')
 
+Route.resource('/pets', 'PetsController').apiOnly()
 
