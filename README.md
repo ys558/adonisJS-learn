@@ -44,7 +44,7 @@ Route.delete('/pets', 'PetsController.store')
 
 执行，可看到路由对应的controller
 ```bash
-$ node ace list:routes
+> node ace list:routes
 ┌───────────┬────────────┬──────────────────────┬────────────┬───────────────────┐
 │ Method    │ Route      │ Handler              │ Middleware │ Name              │
 ├───────────┼────────────┼──────────────────────┼────────────┼───────────────────┤
@@ -66,7 +66,7 @@ Route.resource('/pets', 'PetsController').apiOnly()
 ```
 运行如下，可以看到配置好的对应路由如下：
 ```bash
-$ node ace list:routes
+> node ace list:routes
 ┌────────────┬────────────┬────────────────────────┬────────────┬───────────────────┐
 │ Method     │ Route      │ Handler                │ Middleware │ Name              │
 ├────────────┼────────────┼────────────────────────┼────────────┼───────────────────┤
@@ -91,7 +91,7 @@ Route.resource('owners.pets', 'PetsController').apiOnly()
 ```
 
 ```bash
-$ node ace list:routes
+> node ace list:routes
 ┌────────────┬────────────────────────────┬──────────────────────────┬────────────┬─────────────────────┐
 │ Method     │ Route                      │ Handler                  │ Middleware │ Name                │
 ├────────────┼────────────────────────────┼──────────────────────────┼────────────┼─────────────────────┤
@@ -120,7 +120,7 @@ $ node ace list:routes
 ```
 
 
-## 连接数据库
+## 连接数据库及生成数据库脚本文件
 
 安装专门连接数据库的库：`@adonisjs/lucid`
 ```bash
@@ -130,7 +130,7 @@ npm i @adonisjs/lucid
 运行以下命令，可选常用数据库安装, 一次可选择多个, 这里选择了 sqlite 和 mysql 两个数据库
 
 ```bash
-$ node ace configure @adonisjs/lucid
+> node ace configure @adonisjs/lucid
 ❯ Select the database driver you want to use …  Press <SPACE> to select
 ◉ SQLite
 ◉ MySQL / MariaDB
@@ -198,8 +198,8 @@ DB_CONNECTION=sqlite
 
 迁移生成对应controller文件, 执行以下命令: 
 ```bash
-$ node ace make:migration pets
-CREATE: database/migrations/1637378552380_pets.ts
+> node ace make:migration pets                                                                           ⏎
+CREATE: database/migrations/1637380011782_pets.ts
 ```
 
 生成的文件如下:
@@ -229,3 +229,79 @@ export default class Pets extends BaseSchema {
   }
 }
 ```
+
+再根据以上文件生成数据库的脚本文件
+```bash
+❯ node ace migration:run      
+❯ migrated database/migrations/1637380011782_pets
+```
+
+生成对应的model
+```bash
+❯ node ace make:model Pet    
+CREATE: app/Models/Pet.ts
+```
+
+`app/Models/Pet.ts`
+```ts
+import { DateTime } from 'luxon'
+import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+
+export default class Pet extends BaseModel {
+  @column({ isPrimary: true })
+  public id: number
+
+++ @column()
+++ public name: string
+
+  @column.dateTime({ autoCreate: true })
+  public createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  public updatedAt: DateTime
+}
+```
+注意:  
+以上添加或删除column后需要重新migration一遍,才能更新数据库, 重新migrations之前, 须删除`tmp/db.sqlite3` 文件, 及完全删除 `database/migrations/` 的文件夹及里面的文件,才能生成新的,否则报错
+
+## 修改返回 `app/Controllers/Http/PetsController.ts` 使其和数据库脚本对应上
+
+```ts
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+// 从model导入Pet实例
+import Pet from 'App/Models/Pet'
+
+export default class PetsController {
+  public async index(ctx: HttpContextContract) {
+    return Pet.all()
+  }
+
+  public async store({ request, response }: HttpContextContract) {
+    response.status(201)
+    const body = request.body() // TODO: 鉴权
+    const pet = await Pet.create(body) // 创建实例并存储在一个实例中, 单例的应用
+    response.status(201)
+    return pet
+  }
+
+  public async show({params}: HttpContextContract) {
+    return Pet.findOrFail(params.id)
+  }
+
+  public async update({ params, request }: HttpContextContract) {
+    const body = request.body()
+    const pet = await Pet.findOrFail(params.id)
+    pet.name = body.name
+    return pet.save()
+  }
+
+  public async destroy({params, reponse}: HttpContextContract) {
+    const pet = await Pet.findOrFail(params.id)
+    // response.status(204)
+    await pet.delete()
+    return pet
+  }
+}
+```
+
+![更改完后直接用 `Thunder Client` 测试一下, 发现会添加成功]()
