@@ -118,3 +118,23 @@ $ node ace list:routes
 │ DELETE     │ /owners/:owner_id/pets/:id │ PetsController.destroy   │            │ owners.pets.destroy │
 └────────────┴────────────────────────────┴──────────────────────────┴────────────┴─────────────────────┘
 ```
+
+
+## 连接数据库
+
+安装专门连接数据库的库：`@adonisjs/lucid`
+```bash
+npm i @adonisjs/lucid
+```
+
+运行以下命令，可选常用数据库安装：
+
+```bash
+$ node ace configure @adonisjs/lucid
+> Select the database driver you want to use ...  Press <SPACE> to select
+( ) SQLite
+( ) MySQL / MariaDB
+( ) PostgreSQL
+( ) OracleDB
+( ) Microsoft SQL Server
+```
