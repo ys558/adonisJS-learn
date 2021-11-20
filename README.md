@@ -303,5 +303,32 @@ export default class PetsController {
   }
 }
 ```
+更改完后直接用 `Thunder Client` 测试一下, 发现会添加成功:
 
-![更改完后直接用 `Thunder Client` 测试一下, 发现会添加成功]()
+![效果](https://cdn.jsdelivr.net/gh/ys558/my-blog-imgs@0.45/articles/adonisJS学习/01.png)
+
+
+## 鉴权
+
+返回`PetsController.ts`里, 把之前没完成的鉴权补充完整:
+
+```ts
+  public async store({ request, response }: HttpContextContract) {
+
+-- const body = request.body() // TODO: 鉴权
+
+++ const newPetSchema = schema.create({
+      // 用shema.string()为其鉴权, 括号里放入其规则
+      name: schema.string({ trim: true })
+    })
+    const payload = await request.validate({ schema: newPetSchema })
+    
+    const pet = await Pet.create(payload) // 创建实例并存储在一个实例中, 单例的应用
+    response.status(201)
+    return pet
+  }
+```
+
+adonisJS鉴权的所有具体参数可以参考其[文档](https://docs.adonisjs.com/guides/validator/introduction)
+
+![如果插入格式不符合的数据, 则会报422错误](https://cdn.jsdelivr.net/gh/ys558/my-blog-imgs@0.45/articles/adonisJS学习/02.png)
